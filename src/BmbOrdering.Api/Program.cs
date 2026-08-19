@@ -8,6 +8,13 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using BmbOrdering.Api.Middleware;
+using BmbOrdering.Api.Security;
+using BmbOrdering.Application.Abstractions.Authentication;
+using BmbOrdering.Application.Orders.Create;
+using BmbOrdering.Application.Orders.GetById;
+using BmbOrdering.Application.Orders.GetForCurrentCustomer;
+using BmbOrdering.Application.Orders.Delete;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
@@ -58,6 +65,13 @@ builder.Services.AddScoped<RegisterCustomerValidator>();
 builder.Services.AddScoped<RegisterCustomerHandler>();
 builder.Services.AddScoped<LoginCustomerValidator>();
 builder.Services.AddScoped<LoginCustomerHandler>();
+builder.Services.AddScoped<CreateOrderValidator>();
+builder.Services.AddScoped<CreateOrderHandler>();
+builder.Services.AddScoped<GetOrderByIdValidator>();
+builder.Services.AddScoped<GetOrderByIdHandler>();
+builder.Services.AddScoped<GetCustomerOrdersHandler>();
+builder.Services.AddScoped<DeleteOrderValidator>();
+builder.Services.AddScoped<DeleteOrderHandler>();
 
 var jwtSection =
     builder.Configuration.GetSection(JwtOptions.SectionName);
@@ -115,7 +129,11 @@ builder.Services
     });
 
 builder.Services.AddAuthorization();
+builder.Services.AddHttpContextAccessor();
 
+builder.Services.AddScoped<
+    ICurrentUserContext,
+    CurrentUserContext>();
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())

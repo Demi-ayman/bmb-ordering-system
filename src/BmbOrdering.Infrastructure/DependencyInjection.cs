@@ -50,10 +50,20 @@ public static class DependencyInjection
         services.AddScoped<
                 ICustomerRepository,
                 CustomerRepository>();
+        services.AddScoped<
+                IOrderRepository,
+                OrderRepository>();
+        services.AddScoped<
+                IOrderDeletionEventRepository,
+                OrderDeletionEventRepository>();
+
         services.AddScoped<IUnitOfWork>(
             serviceProvider =>
                 serviceProvider.GetRequiredService<
                     OrderingDbContext>());
+        services.AddScoped<
+                ITransactionManager,
+                TransactionManager>();
 
         services.AddSingleton<IClock, SystemClock>();
         services.AddScoped<IPasswordService, PasswordService>();
