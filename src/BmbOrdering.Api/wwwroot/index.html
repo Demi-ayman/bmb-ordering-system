@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Secure customer ordering portal for BMB Group.">
+    <title>BMB Ordering</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <header class="site-header">
+        <a class="brand" href="/" aria-label="BMB Ordering home">
+            <span class="brand-mark">B</span>
+            <span>
+                <strong>BMB Ordering</strong>
+                <small>Customer portal</small>
+            </span>
+        </a>
+        <div id="sessionActions" class="session-actions" hidden>
+            <span id="headerUserName"></span>
+            <button id="logoutButton" class="button button-ghost" type="button">Sign out</button>
+        </div>
+    </header>
+
+    <main>
+        <section id="authView" class="auth-layout">
+            <div class="intro-panel">
+                <p class="eyebrow">Simple. Secure. Accountable.</p>
+                <h1>Orders without the operational noise.</h1>
+                <p class="intro-copy">
+                    Create and track customer orders through a secure portal with clear status,
+                    pricing, and deletion monitoring.
+                </p>
+                <div class="feature-list" aria-label="Product features">
+                    <span>JWT-secured access</span>
+                    <span>Real-time totals</span>
+                    <span>Audited deletions</span>
+                </div>
+            </div>
+
+            <div class="auth-card">
+                <div class="auth-tabs" role="tablist" aria-label="Account actions">
+                    <button id="loginTab" class="auth-tab active" type="button" role="tab">Sign in</button>
+                    <button id="registerTab" class="auth-tab" type="button" role="tab">Create account</button>
+                </div>
+
+                <form id="loginForm" class="form-stack">
+                    <div class="form-heading">
+                        <h2>Welcome back</h2>
+                        <p>Use your customer credentials to continue.</p>
+                    </div>
+                    <label>
+                        Email address
+                        <input id="loginEmail" name="email" type="email" autocomplete="email" required>
+                    </label>
+                    <label>
+                        Password
+                        <input name="password" type="password" autocomplete="current-password" required>
+                    </label>
+                    <button class="button button-primary" type="submit">Sign in</button>
+                </form>
+
+                <form id="registerForm" class="form-stack" hidden>
+                    <div class="form-heading">
+                        <h2>Create your account</h2>
+                        <p>Registration takes less than a minute.</p>
+                    </div>
+                    <label>
+                        Full name
+                        <input name="fullName" type="text" maxlength="150" autocomplete="name" required>
+                    </label>
+                    <label>
+                        Email address
+                        <input name="email" type="email" maxlength="256" autocomplete="email" required>
+                    </label>
+                    <label>
+                        Password
+                        <input name="password" type="password" minlength="8" maxlength="100" autocomplete="new-password" required>
+                        <small>At least 8 characters with uppercase, lowercase, and a number.</small>
+                    </label>
+                    <label>
+                        Confirm password
+                        <input name="passwordConfirmation" type="password" autocomplete="new-password" required>
+                    </label>
+                    <button class="button button-primary" type="submit">Create account</button>
+                </form>
+            </div>
+        </section>
+
+        <section id="dashboardView" class="dashboard" hidden>
+            <div class="dashboard-heading">
+                <div>
+                    <p class="eyebrow">Ordering workspace</p>
+                    <h1>Welcome, <span id="customerName">Customer</span></h1>
+                    <p id="customerEmail" class="muted"></p>
+                </div>
+                <span id="roleBadge" class="role-badge">Customer</span>
+            </div>
+
+            <div id="banNotice" class="notice notice-warning" role="status" hidden></div>
+
+            <div class="workspace-grid">
+                <aside class="panel create-panel">
+                    <div class="panel-heading">
+                        <div>
+                            <p class="eyebrow">New order</p>
+                            <h2>Add order items</h2>
+                        </div>
+                    </div>
+
+                    <form id="createOrderForm">
+                        <div id="orderItems" class="order-items"></div>
+                        <button id="addItemButton" class="button button-secondary button-full" type="button">
+                            + Add another item
+                        </button>
+                        <div class="order-summary">
+                            <span>Estimated total</span>
+                            <strong id="estimatedTotal">EGP 0.00</strong>
+                        </div>
+                        <button class="button button-primary button-full" type="submit">Place order</button>
+                    </form>
+                </aside>
+
+                <section class="panel orders-panel">
+                    <div class="panel-heading orders-heading">
+                        <div>
+                            <p class="eyebrow">Order history</p>
+                            <h2 id="ordersTitle">My orders</h2>
+                        </div>
+                        <button id="refreshOrdersButton" class="button button-ghost" type="button">Refresh</button>
+                    </div>
+
+                    <div class="order-tabs">
+                        <button id="myOrdersTab" class="order-tab active" type="button">My orders</button>
+                        <button id="allOrdersTab" class="order-tab" type="button" hidden>All orders</button>
+                    </div>
+
+                    <div id="ordersList" class="orders-list" aria-live="polite"></div>
+                </section>
+            </div>
+        </section>
+    </main>
+
+    <template id="orderItemTemplate">
+        <div class="order-item-row">
+            <label>
+                Product
+                <input class="product-name" type="text" maxlength="200" placeholder="e.g. Keyboard" required>
+            </label>
+            <label>
+                Qty
+                <input class="quantity" type="number" min="1" step="1" value="1" required>
+            </label>
+            <label>
+                Unit price
+                <input class="unit-price" type="number" min="0" step="0.01" value="0.00" required>
+            </label>
+            <button class="remove-item" type="button" aria-label="Remove item">&times;</button>
+        </div>
+    </template>
+
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+    <div id="loadingOverlay" class="loading-overlay" hidden>
+        <div class="spinner" aria-label="Loading"></div>
+    </div>
+
+    <script src="/js/app.js" defer></script>
+</body>
+</html>
