@@ -45,6 +45,30 @@ public sealed class ExceptionHandlingMiddleware
                 "Authentication failed",
                 exception.Message);
         }
+        catch (AuthenticationRequiredException exception)
+        {
+            await WriteProblemAsync(
+                context,
+                StatusCodes.Status401Unauthorized,
+                "Authentication required",
+                exception.Message);
+        }
+        catch (NotFoundException exception)
+        {
+            await WriteProblemAsync(
+                context,
+                StatusCodes.Status404NotFound,
+                "Resource not found",
+                exception.Message);
+        }
+        catch (OrderingBannedException exception)
+        {
+            await WriteProblemAsync(
+                context,
+                StatusCodes.Status403Forbidden,
+                "Ordering temporarily blocked",
+                exception.Message);
+        }
         catch (DomainException exception)
         {
             await WriteProblemAsync(
