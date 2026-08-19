@@ -54,6 +54,39 @@ public sealed class LoginCustomerHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_ForAdministrator_IncludesAdministratorRole()
+    {
+        var repository = new FakeCustomerRepository();
+        var passwordService = new FakePasswordService();
+        var tokenGenerator = new FakeJwtTokenGenerator(
+            "administrator-token",
+            UtcNow.AddMinutes(30));
+        var roleProvider = new FakeUserRoleProvider(
+            RoleNames.Customer,
+            RoleNames.Administrator);
+
+        var customer = CreateCustomer();
+        repository.Seed(customer);
+
+        var handler = CreateHandler(
+            repository,
+            passwordService,
+            tokenGenerator,
+            roleProvider);
+
+        await handler.HandleAsync(
+            new LoginCustomerCommand(
+                "demiana@example.com",
+                "StrongPass1"));
+
+        Assert.Same(customer, roleProvider.LastCustomer);
+        Assert.NotNull(tokenGenerator.LastRoles);
+        Assert.Contains(
+            RoleNames.Administrator,
+            tokenGenerator.LastRoles);
+    }
+
+    [Fact]
     public async Task HandleAsync_WithUnknownEmail_ThrowsInvalidCredentials()
     {
         var repository = new FakeCustomerRepository();
@@ -116,13 +149,16 @@ public sealed class LoginCustomerHandlerTests
     private static LoginCustomerHandler CreateHandler(
         FakeCustomerRepository repository,
         FakePasswordService passwordService,
-        FakeJwtTokenGenerator tokenGenerator)
+        FakeJwtTokenGenerator tokenGenerator,
+        FakeUserRoleProvider? roleProvider = null)
     {
         return new LoginCustomerHandler(
             new LoginCustomerValidator(),
             repository,
             passwordService,
-            tokenGenerator);
+            tokenGenerator,
+            roleProvider ?? new FakeUserRoleProvider(
+                RoleNames.Customer));
     }
 
     private static Customer CreateCustomer()

@@ -1,7 +1,9 @@
 using BmbOrdering.Application.Abstractions.Authentication;
+using BmbOrdering.Application.Abstractions.Authorization;
 using BmbOrdering.Application.Abstractions.Persistence;
 using BmbOrdering.Application.Abstractions.Time;
 using BmbOrdering.Infrastructure.Authentication;
+using BmbOrdering.Infrastructure.Authorization;
 using BmbOrdering.Infrastructure.Persistence;
 using BmbOrdering.Infrastructure.Time;
 using Microsoft.EntityFrameworkCore;
@@ -68,6 +70,22 @@ public static class DependencyInjection
         services.AddSingleton<IClock, SystemClock>();
         services.AddScoped<IPasswordService, PasswordService>();
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+        services.Configure<AuthorizationOptions>(options =>
+        {
+            options.AdministratorEmails = configuration
+                .GetSection(
+                    $"{AuthorizationOptions.SectionName}:" +
+                    nameof(AuthorizationOptions.AdministratorEmails))
+                .GetChildren()
+                .Select(section => section.Value)
+                .Where(value =>
+                    !string.IsNullOrWhiteSpace(value))
+                .Select(value => value!)
+                .ToArray();
+        });
+        services.AddSingleton<
+            IUserRoleProvider,
+            ConfigurationUserRoleProvider>();
 
         return services;
     }

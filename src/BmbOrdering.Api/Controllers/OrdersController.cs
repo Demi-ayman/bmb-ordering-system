@@ -3,6 +3,7 @@ using BmbOrdering.Application.Common.Authorization;
 using BmbOrdering.Application.Orders.Common;
 using BmbOrdering.Application.Orders.Create;
 using BmbOrdering.Application.Orders.Delete;
+using BmbOrdering.Application.Orders.GetAll;
 using BmbOrdering.Application.Orders.GetById;
 using BmbOrdering.Application.Orders.GetForCurrentCustomer;
 using Microsoft.AspNetCore.Authorization;
@@ -20,17 +21,20 @@ public sealed class OrdersController : ControllerBase
 	private readonly GetCustomerOrdersHandler
 		_getCustomerOrdersHandler;
 	private readonly DeleteOrderHandler _deleteOrderHandler;
+	private readonly GetAllOrdersHandler _getAllOrdersHandler;
 
 	public OrdersController(
 		CreateOrderHandler createOrderHandler,
 		GetOrderByIdHandler getOrderByIdHandler,
 		GetCustomerOrdersHandler getCustomerOrdersHandler,
-		DeleteOrderHandler deleteOrderHandler)
+		DeleteOrderHandler deleteOrderHandler,
+		GetAllOrdersHandler getAllOrdersHandler)
 	{
 		_createOrderHandler = createOrderHandler;
 		_getOrderByIdHandler = getOrderByIdHandler;
 		_getCustomerOrdersHandler = getCustomerOrdersHandler;
 		_deleteOrderHandler = deleteOrderHandler;
+		_getAllOrdersHandler = getAllOrdersHandler;
 	}
 
 	[HttpPost]
@@ -87,6 +91,32 @@ public sealed class OrdersController : ControllerBase
 		var results =
 			await _getCustomerOrdersHandler.HandleAsync(
 				cancellationToken);
+
+		var response = results
+			.Select(MapResponse)
+			.ToArray();
+
+		return Ok(response);
+	}
+
+	[HttpGet("all")]
+	[Authorize(Roles = RoleNames.Administrator)]
+	[ProducesResponseType(
+		typeof(OrderResponse[]),
+		StatusCodes.Status200OK)]
+	[ProducesResponseType(
+		typeof(ProblemDetails),
+		StatusCodes.Status401Unauthorized)]
+	[ProducesResponseType(
+		typeof(ProblemDetails),
+		StatusCodes.Status403Forbidden)]
+	public async Task<
+		ActionResult<IReadOnlyCollection<OrderResponse>>>
+		GetAllOrdersAsync(
+			CancellationToken cancellationToken)
+	{
+		var results = await _getAllOrdersHandler.HandleAsync(
+			cancellationToken);
 
 		var response = results
 			.Select(MapResponse)

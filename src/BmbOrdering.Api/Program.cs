@@ -11,6 +11,7 @@ using BmbOrdering.Api.Middleware;
 using BmbOrdering.Api.Security;
 using BmbOrdering.Application.Abstractions.Authentication;
 using BmbOrdering.Application.Orders.Create;
+using BmbOrdering.Application.Orders.GetAll;
 using BmbOrdering.Application.Orders.GetById;
 using BmbOrdering.Application.Orders.GetForCurrentCustomer;
 using BmbOrdering.Application.Orders.Delete;
@@ -72,6 +73,7 @@ builder.Services.AddScoped<GetOrderByIdHandler>();
 builder.Services.AddScoped<GetCustomerOrdersHandler>();
 builder.Services.AddScoped<DeleteOrderValidator>();
 builder.Services.AddScoped<DeleteOrderHandler>();
+builder.Services.AddScoped<GetAllOrdersHandler>();
 
 var jwtSection =
     builder.Configuration.GetSection(JwtOptions.SectionName);
