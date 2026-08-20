@@ -15,6 +15,8 @@ using BmbOrdering.Application.Orders.GetAll;
 using BmbOrdering.Application.Orders.GetById;
 using BmbOrdering.Application.Orders.GetForCurrentCustomer;
 using BmbOrdering.Application.Orders.Delete;
+using BmbOrdering.Application.Customers.GetAll;
+using BmbOrdering.Application.Customers.GetOrders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -74,6 +76,9 @@ builder.Services.AddScoped<GetCustomerOrdersHandler>();
 builder.Services.AddScoped<DeleteOrderValidator>();
 builder.Services.AddScoped<DeleteOrderHandler>();
 builder.Services.AddScoped<GetAllOrdersHandler>();
+builder.Services.AddScoped<GetAllCustomersHandler>();
+builder.Services.AddScoped<GetCustomerOrdersForAdminValidator>();
+builder.Services.AddScoped<GetCustomerOrdersForAdminHandler>();
 
 var jwtSection =
     builder.Configuration.GetSection(JwtOptions.SectionName);

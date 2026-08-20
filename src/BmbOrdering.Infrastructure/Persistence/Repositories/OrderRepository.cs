@@ -43,6 +43,22 @@ public sealed class OrderRepository : IOrderRepository
         return orders;
     }
 
+    public async Task<IReadOnlyList<Order>>
+        GetAllByCustomerIdAsync(
+            Guid customerId,
+            CancellationToken cancellationToken = default)
+    {
+        var orders = await _dbContext.Orders
+            .IgnoreQueryFilters()
+            .AsNoTracking()
+            .Include(order => order.Items)
+            .Where(order => order.CustomerId == customerId)
+            .OrderByDescending(order => order.CreatedAtUtc)
+            .ToListAsync(cancellationToken);
+
+        return orders;
+    }
+
     public async Task<IReadOnlyList<Order>> GetAllAsync(
         CancellationToken cancellationToken = default)
     {

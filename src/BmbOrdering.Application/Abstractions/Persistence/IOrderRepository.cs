@@ -13,6 +13,10 @@ public interface IOrderRepository
         Guid customerId,
         CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<Order>> GetAllByCustomerIdAsync(
+        Guid customerId,
+        CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<Order>> GetAllAsync(
         CancellationToken cancellationToken = default);
 

@@ -46,6 +46,17 @@ public sealed class FakeCustomerRepository : ICustomerRepository
         return Task.FromResult(customer);
     }
 
+    public Task<IReadOnlyList<Customer>> GetAllAsync(
+        CancellationToken cancellationToken = default)
+    {
+        IReadOnlyList<Customer> customers = _customers
+            .OrderBy(customer => customer.FullName)
+            .ThenBy(customer => customer.Email)
+            .ToArray();
+
+        return Task.FromResult(customers);
+    }
+
     public void Add(Customer customer)
     {
         _customers.Add(customer);

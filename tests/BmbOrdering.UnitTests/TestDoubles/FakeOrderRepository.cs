@@ -38,6 +38,18 @@ public sealed class FakeOrderRepository : IOrderRepository
 		return Task.FromResult(orders);
 	}
 
+	public Task<IReadOnlyList<Order>> GetAllByCustomerIdAsync(
+		Guid customerId,
+		CancellationToken cancellationToken = default)
+	{
+		IReadOnlyList<Order> orders = _orders
+			.Where(order => order.CustomerId == customerId)
+			.OrderByDescending(order => order.CreatedAtUtc)
+			.ToArray();
+
+		return Task.FromResult(orders);
+	}
+
 	public Task<IReadOnlyList<Order>> GetAllAsync(
 		CancellationToken cancellationToken = default)
 	{
