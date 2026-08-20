@@ -9,7 +9,9 @@ const state = {
     token: null,
     profile: null,
     roles: [],
-    orderView: "mine"
+    orderView: "mine",
+    customers: [],
+    selectedCustomer: null
 };
 
 const elements = {
@@ -35,6 +37,11 @@ const elements = {
     refreshOrdersButton: document.querySelector("#refreshOrdersButton"),
     myOrdersTab: document.querySelector("#myOrdersTab"),
     allOrdersTab: document.querySelector("#allOrdersTab"),
+    customersTab: document.querySelector("#customersTab"),
+    customerFilters: document.querySelector("#customerFilters"),
+    customerSearch: document.querySelector("#customerSearch"),
+    customerStatusFilter: document.querySelector("#customerStatusFilter"),
+    backToCustomersButton: document.querySelector("#backToCustomersButton"),
     ordersTitle: document.querySelector("#ordersTitle"),
     ordersList: document.querySelector("#ordersList"),
     toast: document.querySelector("#toast"),
@@ -142,6 +149,8 @@ function clearSession() {
     state.profile = null;
     state.roles = [];
     state.orderView = "mine";
+    state.customers = [];
+    state.selectedCustomer = null;
 }
 
 function getErrorMessage(problem, status) {
@@ -232,13 +241,14 @@ async function showDashboard() {
     elements.roleBadge.textContent = isAdministrator ? "Administrator" : "Customer";
     elements.roleBadge.classList.toggle("admin", isAdministrator);
     elements.allOrdersTab.hidden = !isAdministrator;
+    elements.customersTab.hidden = !isAdministrator;
     updateBanNotice(state.profile.bannedUntilUtc);
 
     if (elements.orderItems.children.length === 0) {
         addOrderItem();
     }
 
-    await loadOrders();
+    await setWorkspaceView(isAdministrator ? "customers" : "mine");
 }
 
 function addOrderItem(values = {}) {
@@ -302,7 +312,9 @@ function renderOrders(orders) {
             "empty-state",
             state.orderView === "all"
                 ? "No orders are available in the system."
-                : "You have no active orders yet."
+                : state.orderView === "customer-orders"
+                    ? `${state.selectedCustomer?.fullName || "This customer"} has no orders.`
+                    : "You have no active orders yet."
         );
         elements.ordersList.appendChild(empty);
         return;
@@ -368,6 +380,160 @@ async function loadOrders() {
     }
 }
 
+function renderCustomers() {
+    const search = elements.customerSearch.value.trim().toLowerCase();
+    const status = elements.customerStatusFilter.value;
+    const customers = state.customers.filter(customer => {
+        const matchesSearch = !search ||
+            customer.fullName.toLowerCase().includes(search) ||
+            customer.email.toLowerCase().includes(search) ||
+            customer.id.toLowerCase().includes(search);
+        const matchesStatus = status === "all" ||
+            (status === "banned" && customer.isOrderingBanned) ||
+            (status === "active" && !customer.isOrderingBanned);
+
+        return matchesSearch && matchesStatus;
+    });
+
+    elements.ordersList.replaceChildren();
+
+    if (customers.length === 0) {
+        elements.ordersList.appendChild(createTextElement(
+            "div",
+            "empty-state",
+            state.customers.length === 0
+                ? "No customers have registered yet."
+                : "No customers match the selected filters."
+        ));
+        return;
+    }
+
+    customers.forEach(customer => {
+        const card = document.createElement("article");
+        card.className = "customer-card";
+
+        const main = document.createElement("div");
+        main.className = "customer-card-main";
+        const heading = document.createElement("div");
+        heading.className = "customer-card-heading";
+        heading.appendChild(createTextElement("h3", "customer-name", customer.fullName));
+
+        const statusBadge = createTextElement(
+            "span",
+            "customer-status",
+            customer.isOrderingBanned ? "Temporarily banned" : "Active"
+        );
+        statusBadge.classList.toggle("banned", customer.isOrderingBanned);
+        heading.appendChild(statusBadge);
+
+        main.append(
+            heading,
+            createTextElement("p", "customer-email", customer.email),
+            createTextElement("p", "customer-meta", `Joined ${formatDate(customer.createdAtUtc)}`),
+            createTextElement("p", "customer-id", `ID: ${customer.id}`)
+        );
+
+        if (customer.isOrderingBanned && customer.bannedUntilUtc) {
+            main.appendChild(createTextElement(
+                "p",
+                "customer-meta",
+                `Ordering blocked until ${formatDate(customer.bannedUntilUtc)}`
+            ));
+        }
+
+        const actions = document.createElement("div");
+        actions.className = "customer-actions";
+        const viewOrdersButton = createTextElement(
+            "button",
+            "button button-secondary",
+            "View orders"
+        );
+        viewOrdersButton.type = "button";
+        viewOrdersButton.addEventListener("click", () => openCustomerOrders(customer));
+        actions.appendChild(viewOrdersButton);
+
+        card.append(main, actions);
+        elements.ordersList.appendChild(card);
+    });
+}
+
+async function loadCustomers() {
+    try {
+        state.customers = await apiRequest("/admin/customers") || [];
+        renderCustomers();
+    } catch (error) {
+        showToast(error.message, "error");
+    }
+}
+
+async function loadCustomerOrders() {
+    if (!state.selectedCustomer) {
+        await setWorkspaceView("customers");
+        return;
+    }
+
+    try {
+        const orders = await apiRequest(
+            `/admin/customers/${state.selectedCustomer.id}/orders`
+        );
+        renderOrders(orders || []);
+    } catch (error) {
+        showToast(error.message, "error");
+    }
+}
+
+function updateWorkspaceControls() {
+    const viewingCustomers = state.orderView === "customers";
+    const viewingCustomerOrders = state.orderView === "customer-orders";
+
+    elements.myOrdersTab.classList.toggle("active", state.orderView === "mine");
+    elements.allOrdersTab.classList.toggle("active", state.orderView === "all");
+    elements.customersTab.classList.toggle(
+        "active",
+        viewingCustomers || viewingCustomerOrders
+    );
+    elements.customerFilters.hidden = !viewingCustomers;
+    elements.backToCustomersButton.hidden = !viewingCustomerOrders;
+
+    if (viewingCustomers) {
+        elements.ordersTitle.textContent = "Customer directory";
+    } else if (viewingCustomerOrders) {
+        elements.ordersTitle.textContent = `${state.selectedCustomer.fullName}'s orders`;
+    } else {
+        elements.ordersTitle.textContent = state.orderView === "all"
+            ? "All system orders"
+            : "My orders";
+    }
+}
+
+async function loadCurrentView() {
+    if (state.orderView === "customers") {
+        await loadCustomers();
+    } else if (state.orderView === "customer-orders") {
+        await loadCustomerOrders();
+    } else {
+        await loadOrders();
+    }
+}
+
+async function setWorkspaceView(view) {
+    state.orderView = view;
+
+    if (view !== "customer-orders") {
+        state.selectedCustomer = null;
+    }
+
+    updateWorkspaceControls();
+    await loadCurrentView();
+}
+
+async function openCustomerOrders(customer) {
+    state.selectedCustomer = customer;
+    state.orderView = "customer-orders";
+    updateWorkspaceControls();
+    await loadCustomerOrders();
+}
+
 async function deleteOrder(order) {
     if (!window.confirm(`Delete order ${order.orderNumber}?`)) {
         return;
@@ -396,7 +562,10 @@ async function deleteOrder(order) {
 elements.loginTab.addEventListener("click", () => setAuthMode("login"));
 elements.registerTab.addEventListener("click", () => setAuthMode("register"));
 elements.addItemButton.addEventListener("click", () => addOrderItem());
-elements.refreshOrdersButton.addEventListener("click", loadOrders);
+elements.refreshOrdersButton.addEventListener("click", loadCurrentView);
+elements.customerSearch.addEventListener("input", renderCustomers);
+elements.customerStatusFilter.addEventListener("change", renderCustomers);
+elements.backToCustomersButton.addEventListener("click", () => setWorkspaceView("customers"));
 
 elements.logoutButton.addEventListener("click", () => {
     clearSession();
@@ -405,19 +574,15 @@ elements.logoutButton.addEventListener("click", () => {
 });
 
 elements.myOrdersTab.addEventListener("click", async () => {
-    state.orderView = "mine";
-    elements.myOrdersTab.classList.add("active");
-    elements.allOrdersTab.classList.remove("active");
-    elements.ordersTitle.textContent = "My orders";
-    await loadOrders();
+    await setWorkspaceView("mine");
 });
 
 elements.allOrdersTab.addEventListener("click", async () => {
-    state.orderView = "all";
-    elements.allOrdersTab.classList.add("active");
-    elements.myOrdersTab.classList.remove("active");
-    elements.ordersTitle.textContent = "All system orders";
-    await loadOrders();
+    await setWorkspaceView("all");
+});
+
+elements.customersTab.addEventListener("click", async () => {
+    await setWorkspaceView("customers");
 });
 
 elements.registerForm.addEventListener("submit", async event => {
@@ -488,8 +653,7 @@ elements.createOrderForm.addEventListener("submit", async event => {
         elements.orderItems.replaceChildren();
         addOrderItem();
         showToast(`Order ${order.orderNumber} was created.`);
-        state.orderView = "mine";
-        elements.myOrdersTab.click();
+        await setWorkspaceView("mine");
     } catch (error) {
         showToast(error.message, "error");
     }

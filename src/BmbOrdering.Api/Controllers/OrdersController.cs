@@ -1,4 +1,5 @@
 using BmbOrdering.Api.Contracts.Orders;
+using BmbOrdering.Api.Mappings;
 using BmbOrdering.Application.Common.Authorization;
 using BmbOrdering.Application.Orders.Common;
 using BmbOrdering.Application.Orders.Create;
@@ -73,7 +74,7 @@ public sealed class OrdersController : ControllerBase
 
 		return Created(
 			$"/api/v1/orders/{result.Id}",
-			MapResponse(result));
+			OrderResponseMapper.Map(result));
 	}
 
 	[HttpGet]
@@ -93,7 +94,7 @@ public sealed class OrdersController : ControllerBase
 				cancellationToken);
 
 		var response = results
-			.Select(MapResponse)
+			.Select(OrderResponseMapper.Map)
 			.ToArray();
 
 		return Ok(response);
@@ -119,7 +120,7 @@ public sealed class OrdersController : ControllerBase
 			cancellationToken);
 
 		var response = results
-			.Select(MapResponse)
+			.Select(OrderResponseMapper.Map)
 			.ToArray();
 
 		return Ok(response);
@@ -148,7 +149,7 @@ public sealed class OrdersController : ControllerBase
 			query,
 			cancellationToken);
 
-		return Ok(MapResponse(result));
+		return Ok(OrderResponseMapper.Map(result));
 	}
 
 	[HttpDelete("{orderId:guid}")]
@@ -187,26 +188,4 @@ public sealed class OrdersController : ControllerBase
 		return Ok(response);
 	}
 
-	private static OrderResponse MapResponse(
-		OrderResult result)
-	{
-		var items = result.Items
-			.Select(item => new OrderItemResponse(
-				item.Id,
-				item.ProductName,
-				item.Quantity,
-				item.UnitPrice,
-				item.LineTotal))
-			.ToArray();
-
-		return new OrderResponse(
-			result.Id,
-			result.CustomerId,
-			result.OrderNumber,
-			result.Status,
-			result.TotalAmount,
-			result.CreatedAtUtc,
-			result.DeletedAtUtc,
-			items);
-	}
 }

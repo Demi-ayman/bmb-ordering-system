@@ -127,12 +127,33 @@
                             <p class="eyebrow">Order history</p>
                             <h2 id="ordersTitle">My orders</h2>
                         </div>
-                        <button id="refreshOrdersButton" class="button button-ghost" type="button">Refresh</button>
+                        <div class="panel-actions">
+                            <button id="backToCustomersButton" class="button button-secondary" type="button" hidden>
+                                &larr; Customers
+                            </button>
+                            <button id="refreshOrdersButton" class="button button-ghost" type="button">Refresh</button>
+                        </div>
                     </div>
 
                     <div class="order-tabs">
                         <button id="myOrdersTab" class="order-tab active" type="button">My orders</button>
                         <button id="allOrdersTab" class="order-tab" type="button" hidden>All orders</button>
+                        <button id="customersTab" class="order-tab" type="button" hidden>Customers</button>
+                    </div>
+
+                    <div id="customerFilters" class="customer-filters" hidden>
+                        <label>
+                            Search customers
+                            <input id="customerSearch" type="search" placeholder="Name, email, or customer ID">
+                        </label>
+                        <label>
+                            Ordering status
+                            <select id="customerStatusFilter">
+                                <option value="all">All customers</option>
+                                <option value="active">Active</option>
+                                <option value="banned">Temporarily banned</option>
+                            </select>
+                        </label>
                     </div>
 
                     <div id="ordersList" class="orders-list" aria-live="polite"></div>

@@ -43,6 +43,18 @@ public sealed class CustomerRepository : ICustomerRepository
             cancellationToken);
     }
 
+    public async Task<IReadOnlyList<Customer>> GetAllAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var customers = await _dbContext.Customers
+            .AsNoTracking()
+            .OrderBy(customer => customer.FullName)
+            .ThenBy(customer => customer.Email)
+            .ToListAsync(cancellationToken);
+
+        return customers;
+    }
+
     public void Add(Customer customer)
     {
         _dbContext.Customers.Add(customer);

@@ -29,7 +29,8 @@ body {
 }
 
 button,
-input {
+input,
+select {
     font: inherit;
 }
 
@@ -219,7 +220,8 @@ label small {
     font-weight: 400;
 }
 
-input {
+input,
+select {
     width: 100%;
     padding: 12px 13px;
     border: 1px solid #cfd8e3;
@@ -230,7 +232,8 @@ input {
     transition: border-color 160ms ease, box-shadow 160ms ease;
 }
 
-input:focus {
+input:focus,
+select:focus {
     border-color: var(--blue);
     box-shadow: 0 0 0 4px rgba(23, 105, 224, 0.12);
 }
@@ -388,6 +391,23 @@ input:focus {
     margin: 20px 0;
 }
 
+.panel-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.customer-filters {
+    margin: 0 0 20px;
+    display: grid;
+    grid-template-columns: minmax(240px, 1fr) minmax(180px, 0.45fr);
+    gap: 14px;
+    padding: 16px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: #f8fafc;
+}
+
 .order-tab {
     min-width: 120px;
 }
@@ -402,6 +422,66 @@ input:focus {
     border: 1px solid var(--border);
     border-radius: 14px;
     background: #fbfcfe;
+}
+
+.customer-card {
+    padding: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: #fbfcfe;
+}
+
+.customer-card-main {
+    min-width: 0;
+}
+
+.customer-card-heading {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.customer-name {
+    margin: 0;
+    font-size: 17px;
+}
+
+.customer-email,
+.customer-meta,
+.customer-id {
+    margin: 6px 0 0;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.customer-id {
+    overflow-wrap: anywhere;
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 11px;
+}
+
+.customer-status {
+    display: inline-flex;
+    padding: 5px 9px;
+    border-radius: 999px;
+    color: #14532d;
+    background: #dcfce7;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.customer-status.banned {
+    color: var(--warning-text);
+    background: var(--warning-bg);
+}
+
+.customer-actions {
+    flex: 0 0 auto;
 }
 
 .order-card-top,
@@ -535,6 +615,25 @@ input:focus {
 
     .order-item-row {
         grid-template-columns: 1fr 1fr;
+    }
+
+    .customer-filters {
+        grid-template-columns: 1fr;
+    }
+
+    .customer-card {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .customer-actions,
+    .customer-actions .button {
+        width: 100%;
+    }
+
+    .panel-actions {
+        flex-wrap: wrap;
+        justify-content: flex-end;
     }
 
     .order-item-row label:first-child {
